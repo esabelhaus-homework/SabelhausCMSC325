@@ -9,6 +9,7 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.collision.CollisionResults;
+import com.jme3.font.BitmapText;
 import com.jme3.input.InputManager;
 import com.jme3.input.Joystick;
 import com.jme3.input.JoystickAxis;
@@ -22,6 +23,8 @@ import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.Ray;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,10 +36,16 @@ public class InputAppState extends AbstractAppState implements AnalogListener, A
 
     private Application app;
     private InputManager inputManager;
-    private MyGameCharacterControl character; //The Custom Character Control
+    private MyGameCharacterControl characterOne; //The Custom Character Control
+    private MyGameCharacterControl characterTwo;
     private float sensitivity = 5000;
-    List<Geometry> targets = new ArrayList<Geometry>();
+    List<Spatial> targets = new ArrayList<Spatial>();
+    BitmapText hits;
 
+    public InputAppState(BitmapText text) {
+        this.hits = text;
+    }
+    
     public enum InputMapping {
 
         LeanLeft,
@@ -123,45 +132,58 @@ public class InputAppState extends AbstractAppState implements AnalogListener, A
     }
 
     public void onAnalog(String action, float value, float tpf) {
-        if (character != null) {
-            character.onAnalog(action, value * sensitivity, tpf);
+        if (characterOne != null && characterTwo != null) {
+            characterOne.onAnalog(action, value * sensitivity, tpf);
+            characterTwo.onAnalog(action, value * sensitivity, tpf);
         }
     }
 
     public void onAction(String name, boolean isPressed, float tpf) {
-        if (character != null) {
+        if (characterOne != null && characterTwo != null) {
 
             if (name.equals("Fire")) {
-                if (isPressed && character.getCooldown() == 0f) {
+                if (isPressed && characterOne.getCooldown() == 0f) {
+                    fire();
+                } else if (isPressed && characterTwo.getCooldown() == 0f) {
                     fire();
                 }
             } else {
 
-                character.onAction(name, isPressed, tpf);
+                characterOne.onAction(name, isPressed, tpf);
+                characterTwo.onAction(name, isPressed, tpf);
             }
         }
     }
 
-    public void setCharacter(MyGameCharacterControl character) {
-        this.character = character;
+    public void setCharacterOne(MyGameCharacterControl character) {
+        this.characterOne = character;
+    }
+    public void setCharacterTwo(MyGameCharacterControl character) {
+        this.characterTwo = character;
     }
 
-    public void setTargets(List<Geometry> targets) {
+    public void setTargets(List<Spatial> targets) {
         this.targets = targets;
     }
-
+    
     public void fire() {
-        if (character != null) {
+        if (characterOne != null && characterTwo != null) {
+            CollisionResults collisions = new CollisionResults();
             Ray r = new Ray(app.getCamera().getLocation(), app.getCamera().getDirection());
-
-            CollisionResults collRes = new CollisionResults();
-            for (Geometry g : targets) {
-                g.collideWith(r, collRes);
+            
+            for (Spatial g : targets) {
+                g.collideWith(r, collisions);
             }
-            if (collRes.size() > 0) {
+            if (collisions.size() > 0) {
                 System.out.println("hit");
             }
-            character.onFire();
+            characterOne.onFire();
+            characterTwo.onFire();
+            
+            hits.setText("HITS : " + collisions.size());
+            hits.notifyAll();
         }
+        
+        
     }
 }
