@@ -27,6 +27,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import java.util.ArrayList;
 import java.util.List;
+import mygame.Main;
 
 /**
  *
@@ -41,10 +42,6 @@ public class InputAppState extends AbstractAppState implements AnalogListener, A
     private float sensitivity = 5000;
     List<Spatial> targets = new ArrayList<Spatial>();
     BitmapText hits;
-
-    public InputAppState(BitmapText text) {
-        this.hits = text;
-    }
     
     public enum InputMapping {
 
@@ -177,11 +174,6 @@ public class InputAppState extends AbstractAppState implements AnalogListener, A
             if (collisions.size() > 0) {
                 System.out.println("hit");
             }
-            characterOne.onFire();
-            characterTwo.onFire();
-            
-            hits.setText("HITS : " + collisions.size());
-            hits.notifyAll();
         }
         
         

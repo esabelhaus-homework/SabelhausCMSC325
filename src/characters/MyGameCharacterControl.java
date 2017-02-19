@@ -29,10 +29,9 @@ public class MyGameCharacterControl extends BetterCharacterControl
     private float cooldownTime = 1f;
     private float cooldown = 0f;
 
-    public MyGameCharacterControl(float radius, float height, float mass, float xloc, float yloc, float zloc, String thisName) {
+    public MyGameCharacterControl(float radius, float height, float mass, String thisName) {
         super(radius, height, mass);
         head.setName(thisName);
-        head.setLocalTranslation(xloc, yloc, zloc);
     }
 
     public void onAction(String action, boolean isPressed, float tpf) {
