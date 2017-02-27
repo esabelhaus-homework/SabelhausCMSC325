@@ -5,22 +5,33 @@ import characters.AICharacterControl;
 import physics.PhysicsTestHelper;
 import characters.MyGameCharacterControl;
 import characters.NavMeshNavigationControl;
+import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
+import com.jme3.asset.TextureKey;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsCollisionEvent;
 import com.jme3.bullet.collision.PhysicsCollisionListener;
 import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
+import com.jme3.input.MouseInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Ray;
+import com.jme3.math.Triangle;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Sphere;
+import com.jme3.texture.Texture;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -34,16 +45,18 @@ import java.util.logging.Logger;
  *
  * @author normenhansen
  */
-public class Main extends SimpleApplication implements PhysicsCollisionListener {
+public class Main extends SimpleApplication {
 
     protected BulletAppState bulletAppState;
+    private CollisionResults collisionResults = new CollisionResults();
     private Vector3f normalGravity = new Vector3f(0, -9.81f, 0);
     public static java.io.File file;
     private static PrintWriter positionFile;
     private HitStateText sceneHitText;
+    private PlayerRecords records;
     private BallStateText[] ballsText;
     private Spatial[] pathFinderTargets;
-    private List<Spatial> targets;
+    private Node targets;
     private int numBalls = 4;
     private NavMeshNavigationControl navMesh;
     float shortest;
@@ -67,7 +80,7 @@ public class Main extends SimpleApplication implements PhysicsCollisionListener 
     public void simpleInitApp() {
         bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
-        bulletAppState.getPhysicsSpace().addCollisionListener(this);
+        //bulletAppState.getPhysicsSpace().addCollisionListener(this);
         //uncomment to enable debugging
         //will show all collision mesh targets
         //bulletAppState.setDebugEnabled(true);
@@ -75,7 +88,10 @@ public class Main extends SimpleApplication implements PhysicsCollisionListener 
         cam.setLocation(new Vector3f(20, 60, 20));
         cam.lookAt(new Vector3f(0, 0, 0), Vector3f.UNIT_Y);
         
-        targets = new ArrayList<Spatial>();
+        targets = new Node("shootable targets");
+        
+        rootNode.attachChild(targets);
+        
         pathFinderTargets = new Spatial[numBalls];
         ballsText = new BallStateText[numBalls];
 
@@ -118,35 +134,25 @@ public class Main extends SimpleApplication implements PhysicsCollisionListener 
 
         stateManager.attach(appState);
 
-        BitmapText hudText = new BitmapText(myFont, true);
-        hudText.setText("CMSC325 Week3 Physics Intro !\n\n\t\t+");
-        hudText.setColor(ColorRGBA.Red);
-        hudText.setSize(guiFont.getCharSet().getRenderedSize());
-        hudText.setLocalTranslation(settings.getWidth() / 2, settings.getHeight() / 2 + hudText.getLineHeight(), 0f); //Positions text to middle of screen
-        guiNode.attachChild(hudText);
+        BitmapText crosshair = new BitmapText(myFont, true);
+        crosshair.setText("+");
+        crosshair.setColor(ColorRGBA.Red);
+        crosshair.setSize(guiFont.getCharSet().getRenderedSize());
+        crosshair.setLocalTranslation(settings.getWidth() / 2 - guiFont.getCharSet().getRenderedSize() / 3 * 2, settings.getHeight() / 2 + crosshair.getLineHeight() / 2, 0);
+        guiNode.attachChild(crosshair);
+        
+//        BitmapText hudText = new BitmapText(myFont, true);
+//        hudText.setText("CMSC325 Week3 Physics Intro !\n\n\t\t+");
+//        hudText.setColor(ColorRGBA.Red);
+//        hudText.setSize(guiFont.getCharSet().getRenderedSize());
+//        hudText.setLocalTranslation(settings.getWidth() / 2, settings.getHeight() / 2 + hudText.getLineHeight(), 0f); //Positions text to middle of screen
+//        guiNode.attachChild(hudText);
 
-        // create list of targets for app state
-        targets.add(playerOneNode);
-        targets.add(playerTwoNode);
+        initGameTargets();
 
         DirectionalLight l = new DirectionalLight();
         rootNode.addLight(l);
         setupCharacter(scene);
-    }
-    
-    // An event handler to detect collisions
-    // currently it displays collisions with the camera
-    // I need to fix this
-    // but it works for now
-    public void collision(PhysicsCollisionEvent event) {
-        CollisionResults results = new CollisionResults();
-        Ray ray = new Ray(cam.getLocation(), cam.getDirection());
-        for (Spatial g : targets) {
-            g.collideWith(ray, results);
-        }
-        if (results.size() > 0) {
-            sceneHitText.hit();
-        }
     }
     
     // generate physics world 
@@ -157,15 +163,14 @@ public class Main extends SimpleApplication implements PhysicsCollisionListener 
         Node scene = (Node) assetManager.loadModel("Scenes/HwTwoScene.j3o");
 
         rootNode.attachChild(scene);
-
-        PhysicsTestHelper.createBallShooter(this, rootNode, bulletAppState.getPhysicsSpace());
+        createBallShooter();
         PhysicsTestHelper.createPhysicsWalls(rootNode, assetManager, bulletAppState.getPhysicsSpace());
-        ArrayList<Spatial> newTargets = PhysicsTestHelper.createPhysicsWorld(rootNode, assetManager, bulletAppState.getPhysicsSpace());
+        /*ArrayList<Spatial> newTargets = */PhysicsTestHelper.createPhysicsWorld(rootNode, assetManager, bulletAppState.getPhysicsSpace());
 
         // add objects to target list
-        for (Spatial t: newTargets) {
-            targets.add(t);
-        }
+//        for (Spatial t: newTargets) {
+//            targets.add(t);
+//        }
         
         Geometry navGeom = new Geometry("NavMesh");
         navGeom.setMesh(((Geometry) scene.getChild("NavMesh")).getMesh());
@@ -197,7 +202,16 @@ public class Main extends SimpleApplication implements PhysicsCollisionListener 
         scene.attachChild(aiCharacter);
         navMesh = new NavMeshNavigationControl((Node) scene);
 
+        targets.attachChild(aiCharacter);
         aiCharacter.addControl(navMesh);
+    }
+    
+    private void initGameTargets() {
+        targets.attachChild(PhysicsTestHelper.createTargetOne(rootNode, assetManager, bulletAppState.getPhysicsSpace()));
+        targets.attachChild(PhysicsTestHelper.createTargetTwo(rootNode, assetManager, bulletAppState.getPhysicsSpace()));
+        targets.attachChild(PhysicsTestHelper.createTargetThree(rootNode, assetManager, bulletAppState.getPhysicsSpace()));
+        targets.attachChild(PhysicsTestHelper.createTargetFour(rootNode, assetManager, bulletAppState.getPhysicsSpace()));
+        
     }
     
     private void createBalls() {
@@ -208,13 +222,62 @@ public class Main extends SimpleApplication implements PhysicsCollisionListener 
         }
     }
     
+    public void createBallShooter() {
+        ActionListener actionListener = new ActionListener() {
+            public void onAction(String name, boolean keyPressed, float tpf) {                
+                PhysicsSpace space = bulletAppState.getPhysicsSpace();
+                Sphere bullet = new Sphere(20, 20, 0.6f, true, false);
+                bullet.setTextureMode(Sphere.TextureMode.Projected);
+                Material mat2 = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+                TextureKey key2 = new TextureKey("Materials/turquoise_scale_material.jpg");
+                key2.setGenerateMips(true);
+                Texture tex2 = assetManager.loadTexture(key2);
+                mat2.setTexture("ColorMap", tex2);
+                if (name.equals("shoot") && !keyPressed) {
+                    Geometry bulletg = new Geometry("bullet", bullet);
+                    bulletg.setMaterial(mat2);
+                    bulletg.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
+                    bulletg.setLocalTranslation(getCamera().getLocation());
+                    RigidBodyControl bulletControl = new RigidBodyControl(10);
+                    bulletg.addControl(bulletControl);
+                    bulletControl.setLinearVelocity(getCamera().getDirection().mult(50));
+                    bulletg.addControl(bulletControl);
+                    rootNode.attachChild(bulletg);
+                    space.add(bulletControl);
+                    sceneHitText.shot();
+                }
+                
+                // Reset results list.
+                CollisionResults results = new CollisionResults();
+
+                // Aim the ray from cam loc to cam direction.
+                Ray ray = new Ray(cam.getLocation(), cam.getDirection());
+                
+                targets.collideWith(ray, results);
+                if (results.size() > 0) {
+                    for (int i = 0; i < results.size(); i++) {
+                        String whatWasHit = results.getCollision(i).getGeometry().getName();
+                        sceneHitText.hit();
+                        break;
+                    }
+                } else {
+                    System.out.println("Nothing Hit");
+                }
+
+            }
+        };
+        getInputManager().addMapping("shoot", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+        getInputManager().addListener(actionListener, "shoot");
+    }
+    
     public class HitStateText {
         private BitmapText hitText;
         int hitCount = 0;
+        int shotsFired = 0;
         
         HitStateText() {
             this.hitText = new BitmapText(guiFont, false);
-            this.hitText.setText("HITS : 0");
+            this.hitText.setText("Shots : 0\nHits : 0");
             this.hitText.setColor(ColorRGBA.Magenta);
             this.hitText.setSize(guiFont.getCharSet().getRenderedSize());
             this.hitText.setLocalTranslation(settings.getWidth() / 2, settings.getHeight() - hitText.getLineHeight(), 0f);
@@ -223,10 +286,28 @@ public class Main extends SimpleApplication implements PhysicsCollisionListener 
         
         public void hit() {
             this.hitCount++;
-            this.hitText.setText("Hits : " + hitCount);
+            this.hitText.setText("Shots : " + shotsFired + "\nHits : " + hitCount);
+        }
+        
+        public void shot() {
+            this.shotsFired++;
+            this.hitText.setText("Shots : " + shotsFired + "\nHits : " + hitCount);
         }
     }
 
+    public class PlayerRecords {
+        private BitmapText pastPlayers;
+        
+        PlayerRecords(String myPlayers) {
+            pastPlayers = new BitmapText(guiFont, false);
+            pastPlayers.setText(myPlayers);
+            pastPlayers.setColor(ColorRGBA.Blue);
+            pastPlayers.setSize(speed);
+            pastPlayers.setLocalTranslation(speed, speed, speed);
+            guiNode.attachChild(pastPlayers);
+        }
+    }
+    
     public class BallStateText {
 
         private BitmapText ballText;
@@ -263,7 +344,7 @@ public class Main extends SimpleApplication implements PhysicsCollisionListener 
             // to the text file
             updatePositionDisplay();
             // get jamie from the root node
-            Spatial jaime = rootNode.getChild("Jaime");
+            Spatial jaime = targets.getChild("Jaime");
             
             positionFile.println("Find The Closest Ball");
             // we dont exactly know the shortest yet so start with ball 0

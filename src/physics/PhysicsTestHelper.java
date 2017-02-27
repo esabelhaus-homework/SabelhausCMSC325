@@ -138,24 +138,89 @@ public class PhysicsTestHelper {
             space.add(boxGeometry);
         }
     }
-    
+
     public static int generateRandomPos() {
         Random positionGenerator = new Random();
-        int pos = positionGenerator.nextInt(6);
+        int pos = positionGenerator.nextInt(20);
         return pos;
+    }
+
+    public static Vector3f generateRandomXYZ() {
+        Random positionGenerator = new Random();
+        int xpos = positionGenerator.nextInt(20);
+        // ensure the objects are placed in the scene
+        int ypos = 24 + positionGenerator.nextInt(20);
+        int zpos = positionGenerator.nextInt(20);
+        return new Vector3f(xpos, ypos, zpos);
+    }
+
+    public static Spatial createTargetOne(Node rootNode, AssetManager assetManager, PhysicsSpace space) {
+        Material mustachio = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        mustachio.setTexture("ColorMap", assetManager.loadTexture("Materials/mustacio.jpg"));
+        //immovable sphere with mesh collision shape
+        Sphere sphere = new Sphere(30, 30, 1);
+        Geometry sphereGeometry = new Geometry("Target One", sphere);
+        sphereGeometry.setMaterial(mustachio);
+        sphereGeometry.setLocalTranslation(generateRandomXYZ());
+        sphereGeometry.addControl(new RigidBodyControl(new MeshCollisionShape(sphere), 0));
+        rootNode.attachChild(sphereGeometry);
+        space.add(sphereGeometry);
+        return sphereGeometry;
+    }
+
+    public static Spatial createTargetTwo(Node rootNode, AssetManager assetManager, PhysicsSpace space) {
+        Material evil = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        evil.setTexture("ColorMap", assetManager.loadTexture("Materials/evil.jpg"));
+        //immovable sphere with mesh collision shape
+        Sphere sphere = new Sphere(30, 30, 1);
+        Geometry sphereGeometry = new Geometry("Target Two", sphere);
+        sphereGeometry.setMaterial(evil);
+        sphereGeometry.setLocalTranslation(generateRandomXYZ());
+        sphereGeometry.addControl(new RigidBodyControl(new MeshCollisionShape(sphere), 0));
+        rootNode.attachChild(sphereGeometry);
+        space.add(sphereGeometry);
+        return sphereGeometry;
+    }
+
+    public static Spatial createTargetThree(Node rootNode, AssetManager assetManager, PhysicsSpace space) {
+        Material batman = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        batman.setTexture("ColorMap", assetManager.loadTexture("Materials/batman.jpg"));
+        //immovable sphere with mesh collision shape
+        Sphere sphere = new Sphere(30, 30, 1);
+        Geometry sphereGeometry = new Geometry("Target Three", sphere);
+        sphereGeometry.setMaterial(batman);
+        sphereGeometry.setLocalTranslation(generateRandomXYZ());
+        sphereGeometry.addControl(new RigidBodyControl(new MeshCollisionShape(sphere), 0));
+        rootNode.attachChild(sphereGeometry);
+        space.add(sphereGeometry);
+        return sphereGeometry;
+    }
+
+    public static Spatial createTargetFour(Node rootNode, AssetManager assetManager, PhysicsSpace space) {
+        Material sunglasses = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        sunglasses.setTexture("ColorMap", assetManager.loadTexture("Materials/sunglasses.jpg"));
+        //immovable sphere with mesh collision shape
+        Sphere sphere = new Sphere(30, 30, 1);
+        Geometry sphereGeometry = new Geometry("Target Four", sphere);
+        sphereGeometry.setMaterial(sunglasses);
+        sphereGeometry.setLocalTranslation(generateRandomXYZ());
+        sphereGeometry.addControl(new RigidBodyControl(new MeshCollisionShape(sphere), 0));
+        rootNode.attachChild(sphereGeometry);
+        space.add(sphereGeometry);
+        return sphereGeometry;
     }
 
     public static Spatial createBall(String name, Node rootNode, AssetManager assetManager, PhysicsSpace space) {
         Material materialSteel = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         materialSteel.setTexture("ColorMap", assetManager.loadTexture("Materials/steel_material.jpg"));
-        
+
         Sphere sphere = new Sphere(40, 40, 1);
         Geometry ballGeometry = new Geometry(name, sphere);
         ballGeometry.setMaterial(materialSteel);
         int xpos = 50 + generateRandomPos();
         int ypos = 24 + generateRandomPos();
         int zpos = generateRandomPos();
-        
+
         ballGeometry.setLocalTranslation(xpos, ypos, zpos);
         //RigidBodyControl automatically uses Sphere collision shapes when attached to single geometry with sphere mesh
         ballGeometry.addControl(new RigidBodyControl(.001f));
@@ -164,7 +229,7 @@ public class PhysicsTestHelper {
         space.add(ballGeometry);
         return ballGeometry;
     }
-    
+
     public static ArrayList<Spatial> createPhysicsWorld(Node rootNode, AssetManager assetManager, PhysicsSpace space) {
         AmbientLight light = new AmbientLight();
         light.setColor(ColorRGBA.LightGray);
@@ -184,10 +249,10 @@ public class PhysicsTestHelper {
 
         Material materialTurcoiseScale = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         materialTurcoiseScale.setTexture("ColorMap", assetManager.loadTexture("Materials/turquoise_scale_material.jpg"));
-        
+
         ArrayList<Spatial> targets = new ArrayList<Spatial>();
 
-        
+
         //movable spheres
         for (int i = 0; i < 5; i++) {
             Sphere sphere = new Sphere(16, 16, .5f);
@@ -256,7 +321,7 @@ public class PhysicsTestHelper {
             space.add(sphereGeometry);
             targets.add(sphereGeometry);
         }
-        
+
         return targets;
     }
 
