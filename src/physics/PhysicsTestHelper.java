@@ -4,7 +4,6 @@ import com.jme3.app.Application;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.TextureKey;
 import com.jme3.bullet.PhysicsSpace;
-import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.input.MouseInput;
@@ -13,8 +12,6 @@ import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
@@ -161,9 +158,10 @@ public class PhysicsTestHelper {
         Sphere sphere = new Sphere(30, 30, 1);
         Geometry sphereGeometry = new Geometry("Target One", sphere);
         sphereGeometry.setMaterial(mustachio);
+        sphereGeometry.rotate(-1.57f, 1.57f, 0);
         sphereGeometry.setLocalTranslation(generateRandomXYZ());
-        sphereGeometry.addControl(new RigidBodyControl(new MeshCollisionShape(sphere), 0));
-        rootNode.attachChild(sphereGeometry);
+        sphereGeometry.addControl(new RigidBodyControl(.001f));
+        sphereGeometry.getControl(RigidBodyControl.class).setRestitution(1);
         space.add(sphereGeometry);
         return sphereGeometry;
     }
@@ -175,9 +173,10 @@ public class PhysicsTestHelper {
         Sphere sphere = new Sphere(30, 30, 1);
         Geometry sphereGeometry = new Geometry("Target Two", sphere);
         sphereGeometry.setMaterial(evil);
+        sphereGeometry.rotate(-1.57f, 1.57f, 0);
         sphereGeometry.setLocalTranslation(generateRandomXYZ());
-        sphereGeometry.addControl(new RigidBodyControl(new MeshCollisionShape(sphere), 0));
-        rootNode.attachChild(sphereGeometry);
+        sphereGeometry.addControl(new RigidBodyControl(.001f));
+        sphereGeometry.getControl(RigidBodyControl.class).setRestitution(1);
         space.add(sphereGeometry);
         return sphereGeometry;
     }
@@ -189,9 +188,10 @@ public class PhysicsTestHelper {
         Sphere sphere = new Sphere(30, 30, 1);
         Geometry sphereGeometry = new Geometry("Target Three", sphere);
         sphereGeometry.setMaterial(batman);
+        sphereGeometry.rotate(-1.57f, 1.57f, 0);
         sphereGeometry.setLocalTranslation(generateRandomXYZ());
-        sphereGeometry.addControl(new RigidBodyControl(new MeshCollisionShape(sphere), 0));
-        rootNode.attachChild(sphereGeometry);
+        sphereGeometry.addControl(new RigidBodyControl(.001f));
+        sphereGeometry.getControl(RigidBodyControl.class).setRestitution(1);
         space.add(sphereGeometry);
         return sphereGeometry;
     }
@@ -203,9 +203,10 @@ public class PhysicsTestHelper {
         Sphere sphere = new Sphere(30, 30, 1);
         Geometry sphereGeometry = new Geometry("Target Four", sphere);
         sphereGeometry.setMaterial(sunglasses);
+        sphereGeometry.rotate(-1.57f, 1.57f, 0);
         sphereGeometry.setLocalTranslation(generateRandomXYZ());
-        sphereGeometry.addControl(new RigidBodyControl(new MeshCollisionShape(sphere), 0));
-        rootNode.attachChild(sphereGeometry);
+        sphereGeometry.addControl(new RigidBodyControl(.001f));
+        sphereGeometry.getControl(RigidBodyControl.class).setRestitution(1);
         space.add(sphereGeometry);
         return sphereGeometry;
     }
@@ -217,7 +218,7 @@ public class PhysicsTestHelper {
         Sphere sphere = new Sphere(40, 40, 1);
         Geometry ballGeometry = new Geometry(name, sphere);
         ballGeometry.setMaterial(materialSteel);
-        int xpos = 50 + generateRandomPos();
+        int xpos = generateRandomPos();
         int ypos = 24 + generateRandomPos();
         int zpos = generateRandomPos();
 

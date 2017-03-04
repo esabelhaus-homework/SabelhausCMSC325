@@ -20,9 +20,9 @@ public class AICharacterControl extends BetterCharacterControl
         implements ActionListener, AnalogListener {
     
     boolean forward = false, backward = false;
-    protected Node head = new Node("Head");
+    protected Node head = new Node("Node");
     private float yaw = 0;
-    protected float moveSpeed = 3;
+    protected float moveSpeed = 8;
     
     public AICharacterControl(float radius, float height, float mass) {
         super(radius, height, mass);
